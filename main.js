@@ -19,7 +19,7 @@ function createWindow() {
     win.loadFile('index.html');
 
     ipcMain.handle('restore-session', () => ({
-        lastUrl: store.get('lastUrl', 'https://example.com'),
+        lastUrl: store.get('lastUrl', 'https://www.google.com'),
         bookmarks: store.get('bookmarks', []),
     }));
 

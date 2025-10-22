@@ -25,25 +25,40 @@ const exportBtn = document.getElementById('export-response');
 const closeSidebar = document.getElementById('close-sidebar');
 
 // Load settings
-let llmEndpoint = window.electronAPI.storeGet('llmEndpoint') || 'http://localhost:1234/v1';
-let llmModel = window.electronAPI.storeGet('llmModel') || 'local-model';
-let apiKey = window.electronAPI.storeGet('apiKey') || 'lm-studio';
-let useDocling = window.electronAPI.storeGet('useDocling') || false;
-let userPrompts = window.electronAPI.storeGet('userPrompts') || [];  // Array of strings
-llmEndpointInput.value = llmEndpoint;
-llmModelInput.value = llmModel;
-apiKeyInput.value = apiKey;
-useDoclingCheckbox.checked = useDocling;
+let llmEndpoint, llmModel, apiKey, useDocling, userPrompts;
 
-// Restore session
+async function loadSettings() {
+    llmEndpoint = await window.electronAPI.storeGet('llmEndpoint') || 'http://localhost:1234/v1';
+    llmModel = await window.electronAPI.storeGet('llmModel') || 'local-model';
+    apiKey = await window.electronAPI.storeGet('apiKey') || 'lm-studio';
+    useDocling = await window.electronAPI.storeGet('useDocling') || false;
+    userPrompts = await window.electronAPI.storeGet('userPrompts') || [];  // Array of strings
+    
+    llmEndpointInput.value = llmEndpoint;
+    llmModelInput.value = llmModel;
+    apiKeyInput.value = apiKey;
+    useDoclingCheckbox.checked = useDocling;
+}
+
+// Restore session and initialize
 (async () => {
+    await loadSettings();
     const session = await window.electronAPI.restoreSession();
     urlInput.value = session.lastUrl;
     webview.loadURL(session.lastUrl);
+    loadThemes(); // Initial theme load
 })();
 
 // Navigation
-goBtn.addEventListener('click', () => webview.loadURL(urlInput.value));
+goBtn.addEventListener('click', () => {
+    let url = urlInput.value.trim();
+    if (url) {
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            url = 'http://' + url;
+        }
+        webview.loadURL(url);
+    }
+});
 backBtn.addEventListener('click', () => webview.goBack());
 forwardBtn.addEventListener('click', () => webview.goForward());
 refreshBtn.addEventListener('click', () => webview.reload());
@@ -75,7 +90,6 @@ function loadThemes() {
         themeSelect.appendChild(option);
     });
 }
-loadThemes();
 
 // Apply Style
 styleBtn.addEventListener('click', applySelectedStyle);
@@ -96,7 +110,7 @@ async function applySelectedStyle() {
 async function generateCssFromLlm(userPrompt) {
     try {
         await window.modules.axios.get(`${llmEndpoint}/models`);
-        const openai = window.modules.OpenAI({ baseURL: llmEndpoint, apiKey });
+        const openai = new window.modules.OpenAI({ baseURL: llmEndpoint, apiKey });
         const response = await openai.chat.completions.create({
             model: llmModel,
             messages: [{ role: 'user', content: `Generate CSS styles for a ${userPrompt} theme for web pages, focusing on body, links, headings. Output only the CSS code.` }],
@@ -208,15 +222,15 @@ async function sendToLLM() {
                 inputContent = await convertToMarkdown(selectedHtml);
             } catch {
                 window.modules.log.warn('Docling failed; falling back.');
-                const turndown = window.modules.TurndownService();
+                const turndown = new window.modules.TurndownService();
                 inputContent = turndown.turndown(selectedHtml);
             }
         } else {
-            const turndown = window.modules.TurndownService();
+            const turndown = new window.modules.TurndownService();
             inputContent = turndown.turndown(selectedHtml);
         }
 
-        const openai = window.modules.OpenAI({ baseURL: llmEndpoint, apiKey });
+        const openai = new window.modules.OpenAI({ baseURL: llmEndpoint, apiKey });
         const response = await openai.chat.completions.create({
             model: llmModel,
             messages: [{ role: 'user', content: `Re-write or analyze this snippet flexibly: \n\n${inputContent}` }],
