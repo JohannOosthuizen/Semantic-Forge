@@ -1,11 +1,3 @@
-const OpenAI = require('openai');
-const TurndownService = require('turndown');
-const { PythonShell } = require('python-shell');
-const axios = require('axios');
-const log = require('electron-log');
-//require('@electron/remote').initialize();
-const { dialog } = require('@electron/remote');
-
 const webview = document.getElementById('webview');
 const urlInput = document.getElementById('url-input');
 const goBtn = document.getElementById('go');
@@ -103,15 +95,15 @@ async function applySelectedStyle() {
 
 async function generateCssFromLlm(userPrompt) {
     try {
-        await axios.get(`${llmEndpoint}/models`);
-        const openai = new OpenAI({ baseURL: llmEndpoint, apiKey });
+        await window.modules.axios.get(`${llmEndpoint}/models`);
+        const openai = window.modules.OpenAI({ baseURL: llmEndpoint, apiKey });
         const response = await openai.chat.completions.create({
             model: llmModel,
             messages: [{ role: 'user', content: `Generate CSS styles for a ${userPrompt} theme for web pages, focusing on body, links, headings. Output only the CSS code.` }],
         });
         return response.choices[0].message.content.replace(/```css\n?|\n?```/g, '').trim();
     } catch (error) {
-        log.error('CSS Generation Error:', error);
+        window.modules.log.error('CSS Generation Error:', error);
         alert('Failed to generate CSS. Using default.');
         return presetThemes.default;
     }
@@ -126,7 +118,7 @@ function applyCustomStyle(css) {
       document.head.appendChild(style);
     })();
   `;
-    webview.executeJavaScript(js).catch(log.error);
+    webview.executeJavaScript(js).catch((error) => window.modules.log.error(error));
 }
 
 // Settings
@@ -179,7 +171,7 @@ function loadPromptList() {
     });
 }
 
-// Auth Handling (unchanged)
+// Auth Handling
 webview.addEventListener('will-navigate', (event) => {
     if (event.url.includes('login') || event.url.includes('auth')) {
         event.preventDefault();
@@ -187,11 +179,11 @@ webview.addEventListener('will-navigate', (event) => {
     }
 });
 
-// LLM Send (updated with apiKey)
+// LLM Send
 llmBtn.addEventListener('click', sendToLLM);
 async function sendToLLM() {
     try {
-        await axios.get(`${llmEndpoint}/models`);
+        await window.modules.axios.get(`${llmEndpoint}/models`);
 
         const selectedHtml = await webview.executeJavaScript(`
       (function() {
@@ -215,16 +207,16 @@ async function sendToLLM() {
             try {
                 inputContent = await convertToMarkdown(selectedHtml);
             } catch {
-                log.warn('Docling failed; falling back.');
-                const turndown = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
+                window.modules.log.warn('Docling failed; falling back.');
+                const turndown = window.modules.TurndownService();
                 inputContent = turndown.turndown(selectedHtml);
             }
         } else {
-            const turndown = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
+            const turndown = window.modules.TurndownService();
             inputContent = turndown.turndown(selectedHtml);
         }
 
-        const openai = new OpenAI({ baseURL: llmEndpoint, apiKey });
+        const openai = window.modules.OpenAI({ baseURL: llmEndpoint, apiKey });
         const response = await openai.chat.completions.create({
             model: llmModel,
             messages: [{ role: 'user', content: `Re-write or analyze this snippet flexibly: \n\n${inputContent}` }],
@@ -234,7 +226,7 @@ async function sendToLLM() {
         llmOutput.innerHTML = llmText.replace(/\n/g, '<br>');
         sidebar.classList.remove('hidden');
     } catch (error) {
-        log.error('Error:', error);
+        window.modules.log.error('Error:', error);
         llmOutput.innerHTML = 'Error: Check settings and LM Studio.';
         sidebar.classList.remove('hidden');
     }
@@ -248,7 +240,7 @@ function convertToMarkdown(htmlContent) {
             args: [htmlContent],
         };
 
-        PythonShell.runString(`
+        window.modules.PythonShell.runString(`
 import sys
 from docling.document_converter import DocumentConverter
 from io import BytesIO
@@ -272,7 +264,8 @@ closeSidebar.addEventListener('click', () => {
 });
 
 exportBtn.addEventListener('click', async () => {
-    const { filePath } = await dialog.showSaveDialog({ defaultPath: 'llm-response.md' });
+    const result = await window.electronAPI.showSaveDialog({ defaultPath: 'llm-response.md' });
+    const filePath = result.filePath;
     if (filePath) await window.electronAPI.saveFile(llmOutput.textContent, filePath);
 });
 
@@ -288,8 +281,20 @@ injectBtn.addEventListener('click', () => {
       }
     })();
   `;
-    webview.executeJavaScript(injectJs).catch(log.error);
+    webview.executeJavaScript(injectJs).catch((error) => window.modules.log.error(error));
 });
 
 // Auto-apply on load
 webview.addEventListener('dom-ready', applySelectedStyle);
+
+// Debug Load Events (optional, from previous suggestion)
+webview.addEventListener('did-fail-load', (e) => {
+    console.error('Load failed:', e.errorDescription, 'Code:', e.errorCode);
+    alert('Page load failed: ' + e.errorDescription);
+});
+webview.addEventListener('did-finish-load', () => {
+    console.log('Page loaded successfully');
+});
+webview.addEventListener('console-message', (e) => {
+    console.log('Webview console:', e.message);
+});

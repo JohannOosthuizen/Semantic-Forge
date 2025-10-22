@@ -1,6 +1,7 @@
-const { app, BrowserWindow, ipcMain, session, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, session, shell, dialog } = require('electron');  // Add dialog here
 const path = require('path');
-const Store = require('electron-store').default;
+const Store = require('electron-store').default;  // Assuming the ESM fix from earlier
+
 const store = new Store();
 
 function createWindow() {
@@ -9,9 +10,9 @@ function createWindow() {
         height: 800,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
-            nodeIntegration: true,
-            contextIsolation: false,
-            webviewTag: true  // Add this line
+            nodeIntegration: false,
+            contextIsolation: true,
+            webviewTag: true  // From previous fixes
         },
     });
 
@@ -28,6 +29,11 @@ function createWindow() {
 
     ipcMain.handle('store-get', (event, key) => store.get(key));
     ipcMain.on('store-set', (event, key, value) => store.set(key, value));
+
+    // New: IPC handler for showSaveDialog
+    ipcMain.handle('show-save-dialog', async (event, options) => {
+        return await dialog.showSaveDialog(options);
+    });
 }
 
 app.whenReady().then(createWindow);

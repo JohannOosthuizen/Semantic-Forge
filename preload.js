@@ -7,4 +7,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     storeSet: (key, value) => ipcRenderer.send('store-set', key, value),
     saveFile: async (content, filePath) => fs.writeFile(filePath, content),
     openAuth: (url) => ipcRenderer.send('open-auth', url),
+    // New: Expose showSaveDialog via IPC
+    showSaveDialog: (options) => ipcRenderer.invoke('show-save-dialog', options),
 });
