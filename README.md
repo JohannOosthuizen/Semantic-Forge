@@ -20,7 +20,7 @@ Built on the idea from [@signulll's X post](https://x.com/signulll/status/198106
 > imagine opening any page & it instantly reflows into a familiar design language… e.g. your personal ui grammar. ai doesn’t just help you use the web… it lets you own it."
 
 ## Installation & Setup
-1. Clone the repo: `git clone https://github.com/yourusername/semantic-forge.git`
+1. Clone the repo: `git clone https://github.com/JohannOosthuizen/Semantic-Forge.git`
 2. Install dependencies: `cd semantic-forge && npm install`
 3. Install LM Studio (default LLM): Download from [lmstudio.ai](https://lmstudio.ai/), load a model, start the local server.
 4. Optional: For Docling, install Python and `pip install docling`.
