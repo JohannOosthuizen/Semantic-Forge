@@ -73,7 +73,7 @@ webview.addEventListener('did-navigate', () => {
 
 // Preset Themes
 const presetThemes = {
-    default: `body { background-color: #fff; color: #000; font-family: Arial; }`,
+    none: ``,
     dark: `body { background-color: #121212; color: #fff; } a { color: #bb86fc; }`,
     'high-contrast': `body { background-color: #000; color: #fff; font-size: 1.2em; } a { color: #ffff00; }`,
     'solarized-dark': `body { background-color: #002b36; color: #839496; } a { color: #268bd2; }`,
@@ -133,7 +133,7 @@ async function generateCssFromLlm(userPrompt) {
     } catch (error) {
         window.modules.log.error('CSS Generation Error:', error);
         alert('Failed to generate CSS. Using default.');
-        return presetThemes.default;
+        return presetThemes.none;
     }
 }
 
