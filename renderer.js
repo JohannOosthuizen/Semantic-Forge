@@ -25,14 +25,16 @@ const exportBtn = document.getElementById('export-response');
 const closeSidebar = document.getElementById('close-sidebar');
 
 // Load settings
-let llmEndpoint, llmModel, apiKey, useDocling, userPrompts;
+let llmEndpoint, llmModel, apiKey, useDocling;
+let userPrompts = [];
 
 async function loadSettings() {
     llmEndpoint = await window.electronAPI.storeGet('llmEndpoint') || 'http://localhost:1234/v1';
     llmModel = await window.electronAPI.storeGet('llmModel') || 'local-model';
     apiKey = await window.electronAPI.storeGet('apiKey') || 'lm-studio';
     useDocling = await window.electronAPI.storeGet('useDocling') || false;
-    userPrompts = await window.electronAPI.storeGet('userPrompts') || [];  // Array of strings
+    const storedPrompts = await window.electronAPI.storeGet('userPrompts');
+    userPrompts = Array.isArray(storedPrompts) ? storedPrompts : [];
     
     llmEndpointInput.value = llmEndpoint;
     llmModelInput.value = llmModel;
@@ -40,14 +42,16 @@ async function loadSettings() {
     useDoclingCheckbox.checked = useDocling;
 }
 
-// Restore session and initialize
-(async () => {
-    await loadSettings();
-    const session = await window.electronAPI.restoreSession();
-    urlInput.value = session.lastUrl;
-    webview.loadURL(session.lastUrl);
-    loadThemes(); // Initial theme load
-})();
+document.addEventListener('DOMContentLoaded', () => {
+    // Restore session and initialize
+    (async () => {
+        await loadSettings();
+        loadThemes(); // Initial theme load
+        const session = await window.electronAPI.restoreSession();
+        urlInput.value = session.lastUrl;
+        webview.loadURL(session.lastUrl);
+    })();
+});
 
 // Navigation
 goBtn.addEventListener('click', () => {
@@ -72,6 +76,10 @@ const presetThemes = {
     default: `body { background-color: #fff; color: #000; font-family: Arial; }`,
     dark: `body { background-color: #121212; color: #fff; } a { color: #bb86fc; }`,
     'high-contrast': `body { background-color: #000; color: #fff; font-size: 1.2em; } a { color: #ffff00; }`,
+    'solarized-dark': `body { background-color: #002b36; color: #839496; } a { color: #268bd2; }`,
+    'solarized-light': `body { background-color: #fdf6e3; color: #657b83; } a { color: #268bd2; }`,
+    'nord': `body { background-color: #2e3440; color: #d8dee9; } a { color: #81a1c1; }`,
+    'gruvbox': `body { background-color: #282828; color: #ebdbb2; } a { color: #83a598; }`,
 };
 
 // Load Theme Selector
@@ -124,6 +132,7 @@ async function generateCssFromLlm(userPrompt) {
 }
 
 function applyCustomStyle(css) {
+    if (!css) return;
     const js = `
     (function() {
       var style = document.createElement('style');

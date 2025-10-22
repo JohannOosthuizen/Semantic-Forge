@@ -18,6 +18,16 @@ function createWindow() {
 
     win.loadFile('index.html');
 
+    // Clear the HTTP cache
+    session.defaultSession.clearCache()
+        .then(() => console.log('Cache cleared successfully'))
+        .catch(error => console.error('Error clearing cache:', error));
+
+    // Clear all storage data (including local storage, IndexedDB, etc.)
+    session.defaultSession.clearStorageData()
+        .then(() => console.log('Storage data cleared successfully'))
+        .catch(error => console.error('Error clearing storage data:', error));
+
     ipcMain.handle('restore-session', () => ({
         lastUrl: store.get('lastUrl', 'https://www.google.com'),
         bookmarks: store.get('bookmarks', []),

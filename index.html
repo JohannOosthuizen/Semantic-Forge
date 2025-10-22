@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>Semantic-Forge Browser</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -30,7 +33,7 @@
         </select>
         <button id="settings-btn" class="ml-2 px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">Settings</button>
     </div>
-    <webview id="webview" src="https://example.com" preload="./preload.js" partition="persist:custombrowser"></webview>
+    <webview id="webview" src="https://www.google.com" preload="./preload.js" partition="persist:custombrowser"></webview>
     <div id="llm-sidebar" class="fixed right-0 top-14 w-80 h-[calc(100vh-3.5rem)] bg-white shadow-lg p-4 overflow-y-auto hidden">
         <h3 class="text-lg font-bold">LLM Response</h3>
         <div id="llm-output" class="mt-2"></div>
