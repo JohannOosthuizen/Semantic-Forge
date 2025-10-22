@@ -123,15 +123,15 @@ async function applySelectedStyle() {
 
 async function generateCssFromLlm(userPrompt) {
     try {
-        await window.modules.axios.get(`${llmEndpoint}/models`);
-        const openai = new window.modules.OpenAI({ baseURL: llmEndpoint, apiKey });
-        const response = await openai.chat.completions.create({
-            model: llmModel,
-            messages: [{ role: 'user', content: `Generate CSS styles for a ${userPrompt} theme for web pages, focusing on body, links, headings. Output only the CSS code.` }],
-        });
-        return response.choices[0].message.content.replace(/```css\n?|\n?```/g, '').trim();
+        const prompt = `Generate CSS styles for a ${userPrompt} theme for web pages, focusing on body, links, headings. Output only the CSS code.`;
+        const result = await window.electronAPI.llmRequest(prompt);
+        if (result.success) {
+            return result.content.replace(/```css\n?|\n?```/g, '').trim();
+        } else {
+            throw new Error(result.error);
+        }
     } catch (error) {
-        window.modules.log.error('CSS Generation Error:', error);
+        console.error('CSS Generation Error:', error);
         alert('Failed to generate CSS. Using default.');
         return presetThemes.none;
     }
@@ -147,7 +147,7 @@ function applyCustomStyle(css) {
       document.head.appendChild(style);
     })();
   `;
-    webview.executeJavaScript(js).catch((error) => window.modules.log.error(error));
+    webview.executeJavaScript(js).catch(console.error);
 }
 
 // Settings
@@ -212,8 +212,6 @@ webview.addEventListener('will-navigate', (event) => {
 llmBtn.addEventListener('click', sendToLLM);
 async function sendToLLM() {
     try {
-        await window.modules.axios.get(`${llmEndpoint}/models`);
-
         const selectedHtml = await webview.executeJavaScript(`
       (function() {
         const selection = window.getSelection();
@@ -231,59 +229,23 @@ async function sendToLLM() {
             return;
         }
 
-        let inputContent = selectedHtml;
-        if (useDocling) {
-            try {
-                inputContent = await convertToMarkdown(selectedHtml);
-            } catch {
-                window.modules.log.warn('Docling failed; falling back.');
-                const turndown = new window.modules.TurndownService();
-                inputContent = turndown.turndown(selectedHtml);
-            }
+        const inputContent = await window.electronAPI.convertToMarkdown(selectedHtml, useDocling);
+
+        const result = await window.electronAPI.llmRequest(inputContent);
+
+        if (result.success) {
+            const llmText = result.content;
+            llmOutput.innerHTML = llmText.replace(/\n/g, '<br>');
+            sidebar.classList.remove('hidden');
         } else {
-            const turndown = new window.modules.TurndownService();
-            inputContent = turndown.turndown(selectedHtml);
+            throw new Error(result.error);
         }
 
-        const openai = new window.modules.OpenAI({ baseURL: llmEndpoint, apiKey });
-        const response = await openai.chat.completions.create({
-            model: llmModel,
-            messages: [{ role: 'user', content: `Re-write or analyze this snippet flexibly: \n\n${inputContent}` }],
-        });
-
-        const llmText = response.choices[0].message.content;
-        llmOutput.innerHTML = llmText.replace(/\n/g, '<br>');
-        sidebar.classList.remove('hidden');
     } catch (error) {
-        window.modules.log.error('Error:', error);
-        llmOutput.innerHTML = 'Error: Check settings and LM Studio.';
+        console.error('Error in sendToLLM:', error);
+        llmOutput.innerHTML = `Error: ${error.message}.<br><br>Check your settings and ensure your local LLM server (like LM Studio) is running.`;
         sidebar.classList.remove('hidden');
     }
-}
-
-function convertToMarkdown(htmlContent) {
-    return new Promise((resolve, reject) => {
-        const options = {
-            mode: 'text',
-            pythonOptions: ['-u'],
-            args: [htmlContent],
-        };
-
-        window.modules.PythonShell.runString(`
-import sys
-from docling.document_converter import DocumentConverter
-from io import BytesIO
-
-html_content = sys.argv[1]
-converter = DocumentConverter()
-result = converter.convert_from_bytes(BytesIO(html_content.encode('utf-8')), 'text/html')
-md = result.document.export_to_markdown()
-print(md)
-    `, options, (err, results) => {
-            if (err) reject(err);
-            else resolve(results[0]);
-        });
-    });
 }
 
 // Sidebar Actions
@@ -310,7 +272,7 @@ injectBtn.addEventListener('click', () => {
       }
     })();
   `;
-    webview.executeJavaScript(injectJs).catch((error) => window.modules.log.error(error));
+    webview.executeJavaScript(injectJs).catch(console.error);
 });
 
 // Auto-apply on load
