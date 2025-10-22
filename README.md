@@ -13,6 +13,8 @@ This app addresses the "tragedy of the web" described in [this X post](https://x
 - **Secure Auth Handling**: Opens system browser for OAuth logins.
 - **User-Friendly UI**: Modern design with Tailwind CSS, intuitive toolbar, and configurable settings (LLM endpoint, model, API key, etc.).
 
+![Logo](https://github.com/JohannOosthuizen/Semantic-Forge/blob/main/assets/logo.jpg)
+
 ## Inspiration
 Built on the idea from [@signulll's X post](https://x.com/signulll/status/1981065810815668446):
 > "imo one of the most unexplored frontiers of browsers is ai as renderer not assistant. what if a webpage wasn’t fixed html but a living semantic object, dynamically reinterpreted in real time by your model of the world?  
