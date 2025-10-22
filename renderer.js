@@ -82,8 +82,14 @@ const presetThemes = {
     'gruvbox': `body { background-color: #282828; color: #ebdbb2; } a { color: #83a598; }`,
 };
 
+webview.addEventListener('dom-ready', () => {
+    loadThemes();
+    applySelectedStyle();
+});
+
 // Load Theme Selector
 function loadThemes() {
+    console.log('Loading themes...');
     themeSelect.innerHTML = '';
     Object.keys(presetThemes).forEach(key => {
         const option = document.createElement('option');
