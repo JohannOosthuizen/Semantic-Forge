@@ -1,4 +1,4 @@
-https://github.com/JohannOosthuizen/Semantic-Forge/blob/main/assets/logo.jpg
+![Logo](https://github.com/JohannOosthuizen/Semantic-Forge/blob/main/assets/logo.jpg)
 
 # Semantic-Forge: AI-Powered Personal Browser
 
