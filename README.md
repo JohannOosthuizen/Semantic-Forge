@@ -1,5 +1,3 @@
-![Logo](https://github.com/JohannOosthuizen/Semantic-Forge/blob/main/assets/logo.jpg)
-
 # Semantic-Forge: AI-Powered Personal Browser
 
 ## Overview
@@ -14,6 +12,8 @@ This app addresses the "tragedy of the web" described in [this X post](https://x
 - **Session Persistence**: Saves last URL, bookmarks, cookies, and settings across restarts.
 - **Secure Auth Handling**: Opens system browser for OAuth logins.
 - **User-Friendly UI**: Modern design with Tailwind CSS, intuitive toolbar, and configurable settings (LLM endpoint, model, API key, etc.).
+
+![Logo](https://github.com/JohannOosthuizen/Semantic-Forge/blob/main/assets/logo.jpg)
 
 ## Inspiration
 Built on the idea from [@signulll's X post](https://x.com/signulll/status/1981065810815668446):
