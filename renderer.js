@@ -110,31 +110,56 @@ styleBtn.addEventListener('click', applySelectedStyle);
 themeSelect.addEventListener('change', applySelectedStyle);
 async function applySelectedStyle() {
     const value = themeSelect.value;
-    let css;
     if (value.startsWith('ai-')) {
         const index = parseInt(value.slice(3));
         const prompt = userPrompts[index];
-        css = await generateCssFromLlm(prompt);
+        const result = await generateThemeFromLlm(prompt);
+        if (result.type === 'html') {
+            applyCustomHtml(result.content);
+        } else {
+            applyCustomStyle(result.content);
+        }
     } else {
-        css = presetThemes[value];
+        applyCustomStyle(presetThemes[value]);
     }
-    applyCustomStyle(css);
 }
 
-async function generateCssFromLlm(userPrompt) {
+async function generateThemeFromLlm(userPrompt) {
     try {
-        const prompt = `Generate CSS styles for a ${userPrompt} theme for web pages, focusing on body, links, headings. Output only the CSS code.`;
-        const result = await window.electronAPI.llmRequest(prompt);
-        if (result.success) {
-            return result.content.replace(/```css\n?|\n?```/g, '').trim();
+        let prompt;
+        if (userPrompt.includes('{input_html}')) {
+            const currentHtml = await webview.executeJavaScript('document.body.innerHTML');
+            prompt = userPrompt.replace('{input_html}', currentHtml);
+            const result = await window.electronAPI.llmRequest(prompt, true);
+            if (result.success) {
+                return { type: 'html', content: result.content.replace(/```html\n?|\n?```/g, '').trim() };
+            } else {
+                throw new Error(result.error);
+            }
         } else {
-            throw new Error(result.error);
+            prompt = `Generate CSS styles for a ${userPrompt} theme for web pages, focusing on body, links, headings. Output only the CSS code.`;
+            const result = await window.electronAPI.llmRequest(prompt, true);
+            if (result.success) {
+                return { type: 'css', content: result.content.replace(/```css\n?|\n?```/g, '').trim() };
+            } else {
+                throw new Error(result.error);
+            }
         }
     } catch (error) {
-        console.error('CSS Generation Error:', error);
-        alert('Failed to generate CSS. Using default.');
-        return presetThemes.none;
+        console.error('Theme Generation Error:', error);
+        alert('Failed to generate theme. Using default.');
+        return { type: 'css', content: presetThemes.none };
     }
+}
+
+function applyCustomHtml(html) {
+    if (!html) return;
+    const js = `
+    (function() {
+      document.documentElement.innerHTML = '${html.replace(/\n/g, '').replace(/'/g, "\\'")}';
+    })();
+  `;
+    webview.executeJavaScript(js).catch(console.error);
 }
 
 function applyCustomStyle(css) {
@@ -231,7 +256,7 @@ async function sendToLLM() {
 
         const inputContent = await window.electronAPI.convertToMarkdown(selectedHtml, useDocling);
 
-        const result = await window.electronAPI.llmRequest(inputContent);
+        const result = await window.electronAPI.llmRequest(inputContent, false);
 
         if (result.success) {
             const llmText = result.content;

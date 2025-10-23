@@ -7,6 +7,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     saveFile: (content, filePath) => ipcRenderer.invoke('save-file', content, filePath),
     openAuth: (url) => ipcRenderer.send('open-auth', url),
     showSaveDialog: (options) => ipcRenderer.invoke('show-save-dialog', options),
-    llmRequest: (prompt) => ipcRenderer.invoke('llm-request', prompt),
+    llmRequest: (prompt, isThemePrompt) => ipcRenderer.invoke('llm-request', prompt, isThemePrompt),
     convertToMarkdown: (html, useDocling) => ipcRenderer.invoke('convert-to-markdown', html, useDocling),
 });

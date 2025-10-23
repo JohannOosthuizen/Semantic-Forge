@@ -126,21 +126,29 @@ function createWindow() {
     });
 
     // IPC handler for LLM requests
-    ipcMain.handle('llm-request', async (event, inputContent) => {
-        const llmEndpoint = store.get('llmEndpoint', 'http://localhost:1234/v1');
-        const llmModel = store.get('llmModel', 'local-model');
-        const apiKey = store.get('apiKey', 'lm-studio');
+    ipcMain.handle('llm-request', async (event, inputContent, isThemePrompt) => {
+        let llmEndpoint = store.get('llmEndpoint', 'https://api.openai.com/v1');
+        const llmModel = store.get('llmModel', 'gpt-4');
+        const apiKey = store.get('apiKey', 'not-set');
+
+        if (llmEndpoint.endsWith('/chat/completions')) {
+            llmEndpoint = llmEndpoint.slice(0, -'/chat/completions'.length);
+        }
 
         try {
-            // 1. Health check
-            await axios.get(`${llmEndpoint}/models`);
+            const prompt = isThemePrompt 
+                ? inputContent 
+                : `Re-write or analyze this snippet: \n\n${inputContent}`;
+            console.log('LLM Prompt:', prompt);
 
-            // 2. OpenAI call
+            // OpenAI call
             const openai = new OpenAI({ baseURL: llmEndpoint, apiKey });
             const response = await openai.chat.completions.create({
                 model: llmModel,
-                messages: [{ role: 'user', content: `Re-write or analyze this snippet flexibly: \n\n${inputContent}` }],
+                messages: [{ role: 'user', content: prompt }],
             });
+
+            console.log('LLM Response:', JSON.stringify(response, null, 2));
 
             return { success: true, content: response.choices[0].message.content };
 
