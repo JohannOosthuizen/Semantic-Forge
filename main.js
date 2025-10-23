@@ -33,7 +33,7 @@ try:
 
     converter = DocumentConverter()
     result = converter.convert(temp_path)
-    md = result.document.export_to_markdown()
+    md = result.document.export_to_markdown(image_export_mode='placeholder')
     print(md)
 except Exception as e:
     print(traceback.format_exc(), file=sys.stderr)
