@@ -5,7 +5,7 @@ const Store = require('electron-store').default;
 const axios = require('axios');
 const OpenAI = require('openai');
 const TurndownService = require('turndown');
-const { PythonShell } = require('python-shell');
+const { spawn } = require('child_process');
 const tmp = require('tmp');
 const util = require('util');
 
@@ -16,59 +16,58 @@ function convertToMarkdown(htmlContent, useDocling) {
     return new Promise((resolve, reject) => {
         console.log(`[convertToMarkdown] Starting conversion. useDocling: ${useDocling}`);
         if (useDocling) {
-            tmp.file({ postfix: '.html' }, (err, tempFilePath, fd, cleanupCallback) => {
-                if (err) {
-                    console.error('[convertToMarkdown] Failed to create temporary file:', err);
-                    const turndown = new TurndownService();
-                    return resolve(turndown.turndown(htmlContent));
-                }
-                console.log(`[convertToMarkdown] Temp file created at: ${tempFilePath}`);
-
-                fs.writeFile(tempFilePath, htmlContent)
-                    .then(() => {
-                        console.log('[convertToMarkdown] Successfully wrote HTML to temp file.');
-                        const options = {
-                            mode: 'text',
-                            pythonOptions: ['-u'],
-                            args: [tempFilePath],
-                        };
-
-                        console.log('[convertToMarkdown] Preparing to run PythonShell...');
-                        PythonShell.runString(`
+            const pythonScript = `
 import sys
 import traceback
+import tempfile
+import os
 from docling.document_converter import DocumentConverter
 
+temp_path = None
 try:
-    file_path = sys.argv[1]
+    html_content = sys.stdin.read()
+    
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.html', encoding='utf-8') as f:
+        f.write(html_content)
+        temp_path = f.name
+
     converter = DocumentConverter()
-    result = converter.convert(file_path)
+    result = converter.convert(temp_path)
     md = result.document.export_to_markdown()
     print(md)
 except Exception as e:
     print(traceback.format_exc(), file=sys.stderr)
     sys.exit(1)
-                        `, options, (pyErr, results) => {
-                            console.log('[convertToMarkdown] PythonShell callback executed.');
-                            cleanupCallback();
-                            if (pyErr) {
-                                console.warn('[convertToMarkdown] Docling conversion failed, falling back to Turndown.', pyErr);
-                                const turndown = new TurndownService();
-                                resolve(turndown.turndown(htmlContent));
-                            } else {
-                                console.log('[convertToMarkdown] Docling conversion successful.');
-                                resolve(results ? results[0] : '');
-                            }
-                        });
-                        console.log('[convertToMarkdown] PythonShell.runString has been called.');
-                    })
-                    .catch(writeErr => {
-                        console.error('[convertToMarkdown] Failed to write to temporary file:', writeErr);
-                        cleanupCallback();
-                        const turndown = new TurndownService();
-                        resolve(turndown.turndown(htmlContent));
-                    });
+finally:
+    if temp_path and os.path.exists(temp_path):
+        os.unlink(temp_path)
+`;
+            const python = spawn('python', ['-c', pythonScript]);
+            
+            let stdout = '';
+            let stderr = '';
+
+            python.stdout.on('data', (data) => {
+                stdout += data.toString();
             });
+
+            python.stderr.on('data', (data) => {
+                stderr += data.toString();
+            });
+
+            python.on('close', (code) => {
+                if (code !== 0) {
+                    console.warn('[convertToMarkdown] Docling conversion failed, falling back to Turndown.', stderr);
+                    const turndown = new TurndownService();
+                    resolve(turndown.turndown(htmlContent));
+                } else {
+                    console.log('[convertToMarkdown] Docling conversion successful.');
+                    resolve(stdout);
+                }
+            });
+
+            python.stdin.write(htmlContent || '');
+            python.stdin.end();
         } else {
             console.log('[convertToMarkdown] Using Turndown for conversion.');
             const turndown = new TurndownService();
