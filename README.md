@@ -1,45 +1,66 @@
-# Semantic-Forge: AI-Powered Personal Browser
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-## Overview
-Semantic-Forge is an innovative desktop browser built with Electron that transforms the web into a personalized experience. Inspired by the vision of AI as a dynamic renderer rather than just an assistant, it reinterprets web pages in real-time to match your preferred UI grammar. No more relearning every site's "dialect" of buttons, navs, and layouts—Semantic-Forge uses AI to reflow content into familiar designs, letting you truly own your browsing.
+# Semantic-Forge: AI-Powered Browser
 
-This app addresses the "tragedy of the web" described in [this X post](https://x.com/signulll/status/1981065810815668446): Every site forces you to adapt to its UI, but with AI-driven rendering, the browser adapts to you.
+An innovative browser experience that uses AI to transform the web into a personalized experience. It reinterprets web pages in real-time to match your preferred UI, styles, and themes.
 
-## Key Features
-- **Custom Styling & Themes**: Apply preset themes (Default, Dark Mode, High Contrast) or AI-generated ones via LLM prompts (e.g., "Futuristic neon theme").
-- **LLM Integration for Re-Rendering**: Select page sections, send to a local LLM (defaults to LM Studio), and get flexible re-writes or analyses. Inject results back or export them.
-- **Docling Option**: Convert selected HTML to structured Markdown for better LLM input (with JS fallback).
-- **Session Persistence**: Saves last URL, bookmarks, cookies, and settings across restarts.
-- **Secure Auth Handling**: Opens system browser for OAuth logins.
-- **User-Friendly UI**: Modern design with Tailwind CSS, intuitive toolbar, and configurable settings (LLM endpoint, model, API key, etc.).
+## Features
 
-![Logo](https://github.com/JohannOosthuizen/Semantic-Forge/blob/main/assets/logo.jpg)
+*   **AI-Powered Theming:** Semantic-Forge doesn't just change colors and fonts; it uses the Google Gemini API to completely reinterpret and rewrite the HTML of web pages based on your chosen theme.
+*   **Creative Default Themes:** Get started with a variety of built-in themes, including:
+    *   **Blueprint:** Renders the page as a technical architectural blueprint.
+    *   **Claymorphism:** A soft, 3D, clay-like aesthetic.
+    *   **Memphis Design:** A vibrant, playful 1980s theme.
+    *   **Shakespeare:** Rewrites the page's content in the style of a 16th-century playwright.
+    *   ...and many more!
+*   **Custom Themes:** Create and save your own themes by writing your own prompts for the AI.
+*   **Personalized Browsing:** Customize the web to your liking with personalized themes and UI.
+*   **Seamless Integration:** Runs as a browser extension, integrating directly with your browsing experience.
 
-## Inspiration
-Built on the idea from [@signulll's X post](https://x.com/signulll/status/1981065810815668446):
-> "imo one of the most unexplored frontiers of browsers is ai as renderer not assistant. what if a webpage wasn’t fixed html but a living semantic object, dynamically reinterpreted in real time by your model of the world?  
-> the tragedy of the web is every site teaches you a new dialect of ui. every button, nav, or layout is a micro language you must relearn. the browser should translate, not you.  
-> imagine opening any page & it instantly reflows into a familiar design language… e.g. your personal ui grammar. ai doesn’t just help you use the web… it lets you own it."
+## Run Locally
 
-## Installation & Setup
-1. Clone the repo: `git clone https://github.com/JohannOosthuizen/Semantic-Forge.git`
-2. Install dependencies: `cd semantic-forge && npm install`
-3. Install LM Studio (default LLM): Download from [lmstudio.ai](https://lmstudio.ai/), load a model, start the local server.
-4. Optional: For Docling, install Python and `pip install docling`.
-5. Run: `npm start`
+**Prerequisites:** Node.js
 
-Configure settings in-app for custom LLM endpoints (e.g., OpenAI-compatible) or prompts.
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/semantic-forge.git
+    cd semantic-forge
+    ```
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+3.  **Set up your environment:**
+    Create a `.env.local` file in the root of the project and add your Gemini API key:
+    ```
+    GEMINI_API_KEY=your_gemini_api_key
+    ```
+4.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+5.  **Load the extension in your browser:**
+    *   Open your browser's extension management page (e.g., `chrome://extensions`).
+    *   Enable "Developer mode".
+    *   Click "Load unpacked" and select the `dist` directory in the project folder.
 
-## Usage
-- Enter a URL and navigate like a standard browser.
-- Select a theme (preset or AI) to reflow the page.
-- Highlight content, "Send to LLM" for AI rendering, then inject or export.
-- Add custom prompts in Settings for new AI themes.
+## Technologies Used
 
-## Contributing
-Pull requests welcome! Focus on enhancing AI rendering, UI polish, or cross-platform support.
+*   **Frontend:** React, TypeScript
+*   **Build Tool:** Vite
+*   **AI:** Google Gemini API
+*   **Browser Extension:** Manifest V3
 
-## License
-MIT License – Feel free to fork and adapt.
+## File Structure
 
-For questions, open an issue or reach out. Let's make the web yours! 🚀
+*   `src/`: Contains the main source code for the extension.
+    *   `App.tsx`: The main React component for the popup UI.
+    *   `content.js`: Content script that runs on web pages.
+    *   `services/geminiService.ts`: Service for interacting with the Google Gemini API.
+*   `public/`: Contains the static assets for the extension.
+    *   `manifest.json`: The extension's manifest file.
+    *   `index.html`: The HTML file for the popup.
+*   `vite.config.ts`: Vite configuration file.
+*   `package.json`: Project dependencies and scripts.

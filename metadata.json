@@ -1,0 +1,7 @@
+{
+  "name": "Semantic-Forge: AI-Powered Browser",
+  "description": "An innovative browser experience that uses AI to transform the web into a personalized experience. It reinterprets web pages in real-time to match your preferred UI, styles, and themes. Features include AI-powered content analysis, image and video generation, real-time voice conversations, and more.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
